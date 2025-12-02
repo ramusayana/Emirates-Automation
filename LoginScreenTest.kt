@@ -3,64 +3,73 @@ import androidx.test.rule.ActivityTestRule
 import androidx.test.espresso.Espresso.*
 import androidx.test.espresso.action.ViewActions.*
 import androidx.test.espresso.matcher.ViewMatchers.*
+import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.ViewMatchers.isEnabled
+import org.hamcrest.Matchers.not
 import org.junit.Test
+import org.junit.Rule
 import org.junit.runner.RunWith
 
+
+
+// Here I'm using Junit 4 as my test runner
 @RunWith(AndroidJUnit4::class)
 class LoginScreenTest {
+
+    // Rule annotation here I'm using JUnit 4
     @get:Rule
     val activityRule = ActivityTestRule(LoginActivity::class.java)
 
-
-
-
     @Test
+
+    // Scenario 1: Verify the Login button is not enabled as the user and password fields are empty and  we then enter the username and password to verify the functionality
+    
     fun testLoginButtonEnabledState() {
-        // Initially, the login button should be disabled
+
         onView(withId(R.id.login_button)).check(matches(not(isEnabled())))
 
-        // Enter username
         onView(withId(R.id.username)).perform(typeText("username"))
 
-        // Enter password
+        onView(withId(R.id.login_button)).check(matches(not(isEnabled())))
+
         onView(withId(R.id.password)).perform(typeText("password"))
 
-        // Now the login button should be enabled
         onView(withId(R.id.login_button)).check(matches(isEnabled()))
     }
 
     @Test
-fun testLoginErrorHandling() {
-    // Enter username
-    onView(withId(R.id.username)).perform(typeText("username"))
 
-    // Enter incorrect password
-    onView(withId(R.id.password)).perform(typeText("wrongpassword"))
+    // Scenario 2: In this test I will be verifying the error message when I enter wrong password and clicked on Login button and I've also added an assertion "check match" to verify the text
 
-    // Click on the login button
-    onView(withId(R.id.login_button)).perform(click())
+    fun testLoginErrorHandling() {
 
-    // Check that an error message is displayed
-    onView(withText("Incorrect username or password"))
-        .inRoot(ToastMatcher())
-        .check(matches(isDisplayed()))
-}
+        onView(withId(R.id.username)).perform(typeText("username"))
 
-@Test
-fun testLoginLockoutAfterFailures() {
-    // Simulate three failed attempts
-    repeat(3) {
-        onView(withId(R.id.username)).perform(replaceText("username"))
-        onView(withId(R.id.password)).perform(replaceText("wrongpassword"))
+        onView(withId(R.id.password)).perform(typeText("wrongpassword"))
+
         onView(withId(R.id.login_button)).perform(click())
+
+        onView(withText("Incorrect username or password entered in the password field"))
+            .inRoot(ToastMatcher())
+            .check(matches(isDisplayed()))
     }
 
-    // Now, the user should be locked out
-    onView(withId(R.id.login_button)).check(matches(not(isEnabled())))
+    @Test
+    
+    // Scenario 3: In this scenario I'm validating the message when user enter too many times and failed attempts and locked out
 
-    // Check that a lockout message is displayed
-    onView(withText("Too many failed attempts. Please try again later."))
-        .check(matches(isDisplayed()))
-}
+    fun testLoginLockoutAfterFailures() {
 
+        // Loop for multiple failed attempts (e.g., for three times)
+        repeat(3) {
+            onView(withId(R.id.username)).perform(replaceText("username"))
+            onView(withId(R.id.password)).perform(replaceText("wrongpassword"))
+            onView(withId(R.id.login_button)).perform(click())
+        }
+
+        onView(withId(R.id.login_button)).check(matches(not(isEnabled())))
+
+        onView(withText("Too many failed attempts. Please try again later."))
+            .check(matches(isDisplayed()))
+    }
 }

@@ -12,7 +12,8 @@ public class LoyaltyPointsServiceTest {
 
     @Test
     public void testCalculatePointsForPurchase(VertxTestContext context) {
-        // Set up a mock user activity
+
+        // here we are Setting up a mock user activity
         UserActivity activity = new UserActivity("PURCHASE", 100); // For example, $100 purchase
 
         // Call the service method
