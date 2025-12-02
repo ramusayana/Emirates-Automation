@@ -58,4 +58,43 @@ class LoginViewTests: XCTestCase {
     XCTAssertEqual(viewModel.errorMessage, "Too many failed attempts. Please try again later.")
 }
 
+// Scenario : Network Monitor (Offline → show message, no service call)
+    func testOfflineShowsMessageAndDoesNotCallService() async {
+
+    // recreate with offline monitor
+
+    networkMonitor = FakeNetworkMonitor(isOnline: false)
+
+    viewModel = LoginViewModel(
+        authService: authService,
+        networkMonitor: networkMonitor,
+        tokenStore: tokenStore
+    )
+
+    viewModel.updateEmail("test@example.com")
+    viewModel.updatePassword("Password123")
+
+    await viewModel.login()
+
+    let state = viewModel.state
+    XCTAssertTrue(state.isOffline)
+    XCTAssertNotNil(state.errorMessage)
+    XCTAssertEqual(authService.callCount, 0)
+}
+
+// Scenario : Remember me Persists Token
+
+func testRememberMeSavesTokenOnSuccess() async {
+    
+    authService.mode = .success(token: "token_abc")
+    viewModel.updateEmail("test@example.com")
+    viewModel.updatePassword("Password123")
+    viewModel.updateRememberMe(true)
+
+    await viewModel.login()
+
+    XCTAssertEqual(tokenStore.savedToken, "token_abc")
+}
+
+
 }

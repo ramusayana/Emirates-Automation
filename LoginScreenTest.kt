@@ -55,7 +55,7 @@ class LoginScreenTest {
     }
 
     @Test
-    
+
     // Scenario 3: In this scenario I'm validating the message when user enter too many times and failed attempts and locked out
 
     fun testLoginLockoutAfterFailures() {
@@ -72,4 +72,47 @@ class LoginScreenTest {
         onView(withText("Too many failed attempts. Please try again later."))
             .check(matches(isDisplayed()))
     }
+
+
+    @Test
+
+// scenario 4 :  Network Monitor (Offline → show message, no service call)
+
+    fun `offlineMessageNoServiceCall`() = runTest {
+
+     // Recreate ViewModel with offline network monitor
+
+    networkMonitor = FakeNetworkMonitor(online = false)
+    viewModel = LoginViewModel(authRepository, networkMonitor, tokenStore)
+
+    viewModel.onEmailChanged("test@example.com")
+    viewModel.onPasswordChanged("Password123")
+
+    viewModel.onLoginClicked()
+
+    val state = viewModel.uiState.value
+    assertTrue(state.isOffline)
+    assertNotNull(state.errorMessage)
+    assertEquals(0, authRepository.callCount) // no backend call
+}
+
+
+// Scenario 5 : Remember me Persists Token
+
+@Test
+    fun `rememberSavesTokenOnSuccess`() = runTest {
+
+    authRepository.nextResult = Result.success("token_abc")
+    viewModel.onEmailChanged("test@example.com")
+    viewModel.onPasswordChanged("Password123")
+
+  
+    viewModel.onRememberMeChanged(true)
+
+    viewModel.onLoginClicked()
+
+    assertEquals("token_abc", tokenStore.savedToken)
+}
+
+
 }
